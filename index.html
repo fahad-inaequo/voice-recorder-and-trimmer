@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trimmer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/wavesurfer.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/plugin/wavesurfer.regions.min.js"></script>
+  <script src="https://markjivko.com/dist/recorder.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/gh/fahad-inaequo/worker/scripts.js"></script>
+  <body>
+    <div
+      id="waveform"
+      class="w3-border w3-round-large"
+      data-step="3"
+      data-intro="Click and drag to select section"
+    />
+    <div>
+      <button onClick="startRecording()">Start Recording</button>
+      <button onClick="stopRecording()">Stop Recording</button>
+      <button id="playAndPause" class="play" onClick="playAndPause()">
+        Play/Pause
+      </button>
+      <button onClick="trimAudio()">Trim Audio</button>
+      <b id="time-current">0.00</b> / <b id="time-total">0.00</b>
+    </div>
+  </body>
+</html>
