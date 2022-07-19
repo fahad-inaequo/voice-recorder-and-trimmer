@@ -49,7 +49,8 @@ async function trimAudio() {
 
 function encodeAudioBufferLame(audioData) {
   return new Promise((resolve, reject) => {
-    var worker = new Worker('https://cdn.jsdelivr.net/gh/fahad-inaequo/fahad-inaequo.github.io/worker.js')
+    var worker = new Worker('./worker.js')
+    // var worker = new Worker('https://cdn.jsdelivr.net/gh/fahad-inaequo/fahad-inaequo.github.io/worker.js')
 
     worker.onmessage = (event) => {
       console.log(event.data);
