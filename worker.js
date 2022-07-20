@@ -1,8 +1,8 @@
 (function() {
 	'use strict';
 
-	// importScripts('../vendor/lame.min.js');
-	importScripts("https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js");
+	importScripts('./lame.min.js');
+	// importScripts("https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js");
 
 	var mp3Encoder;
 	var buffer = [];
