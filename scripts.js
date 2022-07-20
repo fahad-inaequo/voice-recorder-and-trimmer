@@ -299,19 +299,23 @@ var app = function () {
 
 function downloadMp3() {
   debugger
-  let region = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
-  //Create empty buffer and then put the slice of audioBuffer i.e wanted part
-  var startPoint = Math.floor((region.start * audioBuffer.length) / totalAudioDuration);
-  var endPoint = Math.ceil((region.end * audioBuffer.length) / totalAudioDuration);
-  var audioLength = endPoint - startPoint;
-
-  var trimmedAudio = new AudioContext().createBuffer(
-    audioBuffer.numberOfChannels,
-    audioLength,
-    audioBuffer.sampleRate
+  var originalBuffer = wavesurfer.backend.buffer;
+  var emptySegment = wavesurfer.ac.createBuffer(
+    originalBuffer.channels,
+    segmentDuration * originalBuffer.sampleRate,
+    originalBuffer.sampleRate
   );
+  for (var i = 0; i < originalBuffer.channels; i++) {
+    var chanData = originalBuffer.getChannelData(i);
+    var segmentChanData = emptySegment.getChannelData(i);
+    for (var j = 0, len = chanData.length; j < len; j++) {
+      segmentChanData[j] = chanData[j];
+    }
+  }
 
-  var MP3Blob = analyzeAudioBuffer(trimmedAudio);
+  emptySegment;
+
+  var MP3Blob = analyzeAudioBuffer(emptySegment);
   console.log('here is your mp3 url:');
   console.log(URL.createObjectURL(MP3Blob));
 }
