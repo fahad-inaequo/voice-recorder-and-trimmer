@@ -236,8 +236,9 @@ const stopRecording = () => {
 
 
 
-var app = function (params) {
+var app = function () {
   debugger
+  var params = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
   var start = params.start;
   var end = params.end;
 
