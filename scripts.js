@@ -13,119 +13,6 @@ var myRecorder = {
   }
 };
 
-async function trimAudio() {
-  let region = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
-  //Create empty buffer and then put the slice of audioBuffer i.e wanted part
-  var startPoint = Math.floor((region.start * audioBuffer.length) / totalAudioDuration);
-  var endPoint = Math.ceil((region.end * audioBuffer.length) / totalAudioDuration);
-  var audioLength = endPoint - startPoint;
-
-  var trimmedAudio = new AudioContext().createBuffer(
-    audioBuffer.numberOfChannels,
-    audioLength,
-    audioBuffer.sampleRate
-  );
-
-  debugger
-  for (var i = 0; i < audioBuffer.numberOfChannels; i++) {
-    trimmedAudio.copyToChannel(audioBuffer.getChannelData(i).slice(startPoint, endPoint), i);
-  }
-
-  var audioData = {
-    channels: Array.apply(null, { length: trimmedAudio.numberOfChannels })
-      .map(function (_, index) {
-        return trimmedAudio.getChannelData(index);
-      }),
-    sampleRate: trimmedAudio.sampleRate,
-    length: trimmedAudio.length,
-  }
-
-  await encodeAudioBufferLame(audioData)
-    .then((res) => {
-      console.log(res);
-      downloadAudio();
-    })
-    .catch((c) => {
-      console.log(c);
-    });
-  console.log(audioData);
-}
-
-function encodeAudioBufferLame(audioData) {
-  return new Promise((resolve, reject) => {
-    var worker = new Worker('./worker.js');
-
-    worker.onmessage = (event) => {
-      console.log(event.data);
-      if (event.data != null) {
-        resolve(event.data);
-      }
-      else {
-        reject("Error");
-      }
-      var blob = new Blob(event.data.res, { type: 'audio/mp3' });
-      processedAudio = new window.Audio();
-      processedAudio.src = URL.createObjectURL(blob);
-      console.log(blob);
-    };
-
-    worker.postMessage({ 'audioData': audioData });
-  });
-}
-
-async function readAndDecodeAudio(audioFile) {
-  arrBuffer = null;
-  audioBuffer = null;
-
-  //Read the original Audio
-  await readAudio(audioFile)
-    .then((results) => {
-      arrBuffer = results.result;
-    })
-    .catch((err) => {
-      window.alert("Some Error occured");
-      console.log(err);
-      return;
-    });
-
-  //Decode the original Audio into audioBuffer
-  await new AudioContext().decodeAudioData(arrBuffer)
-    .then((res) => {
-      audioBuffer = res;
-      console.log("audioBuffer  -- ", audioBuffer);
-    })
-    .catch((err) => {
-      window.alert("Can't decode Audio");
-      console.log(err);
-      return;
-    });
-}
-
-function readAudio(file) {
-  return new Promise((resolve, reject) => {
-    var reader = new FileReader();
-    reader.readAsArrayBuffer(file);
-
-    //Resolve if audio gets loaded
-    reader.onload = function () {
-      console.log("Audio Loaded");
-      resolve(reader);
-    }
-
-    reader.onerror = function (error) {
-      console.log("Error while reading audio");
-      reject(error);
-    }
-
-    reader.onabort = function (abort) {
-      console.log("Aborted");
-      console.log(abort);
-      reject(abort);
-    }
-
-  })
-}
-
 const loadAudio = (blobUrl) => {
   if (wavesurfer !== undefined)
     wavesurfer.destroy();
@@ -143,7 +30,6 @@ const loadAudio = (blobUrl) => {
   });
 
   wavesurfer.on('ready', function () {
-    readAndDecodeAudio(blobUrl);
     totalAudioDuration = wavesurfer.getDuration();
     document.getElementById('time-total').innerText = totalAudioDuration.toFixed(1);
     wavesurfer.enableDragSelection({});
@@ -163,14 +49,6 @@ const loadAudio = (blobUrl) => {
   });
 }
 
-function downloadAudio() {
-  var anchorAudio = document.createElement("a");
-  anchorAudio.href = processedAudio.src;
-  anchorAudio.download = "output.mp3";
-  anchorAudio.click();
-  console.log(anchorAudio);
-}
-
 function playAndPause() {
   var icon = document.getElementById("playAndPause");
   if (icon.className === "play") {
@@ -180,10 +58,6 @@ function playAndPause() {
     icon.className = "play";
     wavesurfer.pause();
   }
-}
-
-function playTrack(regionId) {
-  wavesurfer.regions.list[regionId].play();
 }
 
 const startRecording = () => {
@@ -233,24 +107,21 @@ const stopRecording = () => {
   clearInterval(timer);
 }
 
-
-
-
-const myNewFun = () => {
+const trimAudio = () => {
   let region = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
-  //Create empty buffer and then put the slice of audioBuffer i.e wanted part
-  var startPoint = Math.floor((region.start * audioBuffer.length) / totalAudioDuration);
-  var endPoint = Math.ceil((region.end * audioBuffer.length) / totalAudioDuration);
-  var duration = endPoint - startPoint;
+  var start = region.start;
+  var end = region.end;
+  var duration = end - start;
 
-  // create a new buffer to hold the new clip
   var buffer = createBuffer(wavesurfer.backend.buffer, duration)
-  // copy
+
   copyBuffer(wavesurfer.backend.buffer, start, end, buffer, 0)
 
-  // load the new buffer
   wavesurfer.empty()
   wavesurfer.loadDecodedBuffer(buffer)
+  wavesurfer.regions.clear();
+
+  downloadMp3()
 }
 
 function createBuffer(originalBuffer, duration) {
@@ -278,28 +149,12 @@ function copyBuffer(fromBuffer, fromStart, fromEnd, toBuffer, toStart) {
 }
 
 function downloadMp3() {
-  debugger
-  let somoe = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
-  var segmentDuration = somoe.end - somoe.start;
-  var originalBuffer = wavesurfer.backend.buffer;
-  var emptySegment = wavesurfer.backend.ac.createBuffer(
-    originalBuffer.numberOfChannels,
-    segmentDuration * originalBuffer.sampleRate,
-    originalBuffer.sampleRate
-  );
-  for (var i = 0; i < originalBuffer.channels; i++) {
-    var chanData = originalBuffer.getChannelData(i);
-    var segmentChanData = emptySegment.getChannelData(i);
-    for (var j = 0, len = chanData.length; j < len; j++) {
-      segmentChanData[j] = chanData[j];
-    }
-  }
+  var MP3Blob = analyzeAudioBuffer(wavesurfer.backend.buffer);
+  var anchorAudio = document.createElement("a");
 
-  emptySegment;
-
-  var MP3Blob = analyzeAudioBuffer(emptySegment);
-  console.log('here is your mp3 url:');
-  console.log(URL.createObjectURL(MP3Blob));
+  anchorAudio.href = URL.createObjectURL(MP3Blob);
+  anchorAudio.download = "trimmed-output.mp3";
+  anchorAudio.click();
 }
 
 function analyzeAudioBuffer(aBuffer) {
@@ -312,37 +167,35 @@ function analyzeAudioBuffer(aBuffer) {
     btwSample,
     btwOffset = 0,
     btwPos = 0;
-  setUint32(0x46464952); // "RIFF"
-  setUint32(btwLength - 8); // file length - 8
-  setUint32(0x45564157); // "WAVE"
-  setUint32(0x20746d66); // "fmt " chunk
-  setUint32(16); // length = 16
-  setUint16(1); // PCM (uncompressed)
+  setUint32(0x46464952);
+  setUint32(btwLength - 8);
+  setUint32(0x45564157);
+  setUint32(0x20746d66);
+  setUint32(16);
+  setUint16(1);
   setUint16(numOfChan);
   setUint32(aBuffer.sampleRate);
-  setUint32(aBuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-  setUint16(numOfChan * 2); // block-align
-  setUint16(16); // 16-bit
-  setUint32(0x61746164); // "data" - chunk
-  setUint32(btwLength - btwPos - 4); // chunk length
+  setUint32(aBuffer.sampleRate * 2 * numOfChan);
+  setUint16(numOfChan * 2);
+  setUint16(16);
+  setUint32(0x61746164);
+  setUint32(btwLength - btwPos - 4);
 
   for (btwIndex = 0; btwIndex < aBuffer.numberOfChannels; btwIndex++)
     btwChnls.push(aBuffer.getChannelData(btwIndex));
 
   while (btwPos < btwLength) {
     for (btwIndex = 0; btwIndex < numOfChan; btwIndex++) {
-      // interleave btwChnls
-      btwSample = Math.max(-1, Math.min(1, btwChnls[btwIndex][btwOffset])); // clamp
-      btwSample = (0.5 + btwSample < 0 ? btwSample * 32768 : btwSample * 32767) | 0; // scale to 16-bit signed int
-      btwView.setInt16(btwPos, btwSample, true); // write 16-bit sample
+      btwSample = Math.max(-1, Math.min(1, btwChnls[btwIndex][btwOffset]));
+      btwSample = (0.5 + btwSample < 0 ? btwSample * 32768 : btwSample * 32767) | 0;
+      btwView.setInt16(btwPos, btwSample, true);
       btwPos += 2;
     }
-    btwOffset++; // next source sample
+    btwOffset++;
   }
 
   let wavHdr = lamejs.WavHeader.readHeader(new DataView(btwArrBuff));
 
-  //Stereo
   let data = new Int16Array(btwArrBuff, wavHdr.dataOffset, wavHdr.dataLen / 2);
   let leftData = [];
   let rightData = [];
@@ -352,8 +205,6 @@ function analyzeAudioBuffer(aBuffer) {
   }
   var left = new Int16Array(leftData);
   var right = new Int16Array(rightData);
-
-
 
   //STEREO
   if (wavHdr.channels === 2)
@@ -380,33 +231,31 @@ function bufferToMp3(channels, sampleRate, left, right = null) {
   var remaining = left.length;
   var samplesPerFrame = 1152;
 
-
   for (var i = 0; remaining >= samplesPerFrame; i += samplesPerFrame) {
-
     if (!right) {
       var mono = left.subarray(i, i + samplesPerFrame);
       var mp3buf = mp3enc.encodeBuffer(mono);
     }
+
     else {
       var leftChunk = left.subarray(i, i + samplesPerFrame);
       var rightChunk = right.subarray(i, i + samplesPerFrame);
       var mp3buf = mp3enc.encodeBuffer(leftChunk, rightChunk);
     }
+
     if (mp3buf.length > 0) {
-      buffer.push(mp3buf);//new Int8Array(mp3buf));
+      buffer.push(mp3buf);
     }
     remaining -= samplesPerFrame;
   }
+
   var d = mp3enc.flush();
+
   if (d.length > 0) {
     buffer.push(new Int8Array(d));
   }
 
   var mp3Blob = new Blob(buffer, { type: 'audio/mpeg' });
-  //var bUrl = window.URL.createObjectURL(mp3Blob);
 
-  // send the download link to the console
-  //console.log('mp3 download:', bUrl);
   return mp3Blob;
-
 }
