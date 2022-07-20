@@ -52,7 +52,7 @@ async function trimAudio() {
 
 function encodeAudioBufferLame(audioData) {
   return new Promise((resolve, reject) => {
-    var worker = new Worker('./worker/worker.js');
+    var worker = new Worker('./worker.js');
 
     worker.onmessage = (event) => {
       console.log(event.data);
