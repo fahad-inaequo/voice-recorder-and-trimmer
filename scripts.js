@@ -14,7 +14,7 @@ var myRecorder = {
 };
 
 async function trimAudio() {
-  let region = croppedTrack;
+  let region = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
   //Create empty buffer and then put the slice of audioBuffer i.e wanted part
   var startPoint = Math.floor((region.start * audioBuffer.length) / totalAudioDuration);
   var endPoint = Math.ceil((region.end * audioBuffer.length) / totalAudioDuration);
@@ -137,8 +137,6 @@ const loadAudio = (blobUrl) => {
     height: 90,
     responsive: true,
     hideScrollbar: true,
-    // barRadius: 10,
-    // cursorWidth: 1,
     barGap: null
   });
 
@@ -149,19 +147,17 @@ const loadAudio = (blobUrl) => {
     wavesurfer.enableDragSelection({});
   });
   wavesurfer.loadBlob(blobUrl);
-  wavesurfer.on('audioprocess', function () {
+  wavesurfer.on('audioprocess', () => {
     if (wavesurfer.isPlaying()) {
       var currentTime = wavesurfer.getCurrentTime();
       document.getElementById('time-current').innerText = currentTime.toFixed(1);
     }
   });
-  wavesurfer.on('region-created', function (newRegion) {
-    croppedTrack = newRegion
-    console.log(croppedTrack);
+  wavesurfer.on('region-created', () => {
+    wavesurfer.regions.clear();
   });
-  wavesurfer.on('region-update-end', function (newRegion) {
+  wavesurfer.on('region-update-end', (newRegion) => {
     croppedTrack = newRegion
-    console.log(croppedTrack);
   });
 }
 
@@ -209,7 +205,7 @@ const startRecording = () => {
       myRecorder.objects.recorder.record();
       timer = setInterval(() => {
         countDown += 1;
-      
+
         document.getElementById('recording-timer').innerText = countDown
 
         if (countDown === 30) {
