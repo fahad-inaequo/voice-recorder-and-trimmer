@@ -9,6 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/wavesurfer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/plugin/wavesurfer.regions.min.js"></script>
   <script src="https://markjivko.com/dist/recorder.js"></script>
+  <script src="lame.min.js"></script>
   <script src="scripts.js"></script>
   <body>
     <div
@@ -26,6 +27,7 @@
       </button>
       <button onClick="trimAudio()">Trim Audio</button>
       <b id="time-current">0.00</b> / <b id="time-total">0.00</b>
+      <button onClick="downloadMp3()">Download MP3</button>
     </div>
   </body>
 </html>
