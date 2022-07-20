@@ -5,13 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trimmer</title>
-    <link rel="stylesheet" href="styles.css" />
   </head>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/wavesurfer.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.2.3/plugin/wavesurfer.regions.min.js"></script>
   <script src="https://markjivko.com/dist/recorder.js"></script>
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.all.min.js"></script> -->
-  <!-- <script src="https://cdn.jsdelivr.net/gh/fahad-inaequo/fahad-inaequo.github.io/scripts.js"></script> -->
   <script src="scripts.js"></script>
   <body>
     <div
@@ -22,6 +19,7 @@
     />
     <div>
       <button onClick="startRecording()">Start Recording</button>
+      <p id="recording-timer"></p>
       <button onClick="stopRecording()">Stop Recording</button>
       <button id="playAndPause" class="play" onClick="playAndPause()">
         Play/Pause

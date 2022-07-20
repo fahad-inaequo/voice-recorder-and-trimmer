@@ -3,6 +3,8 @@ var arrBuffer;
 var audioBuffer;
 var processedAudio
 var croppedTrack;
+var countDown = 0;
+var timer;
 var myRecorder = {
   objects: {
     context: null,
@@ -37,20 +39,20 @@ async function trimAudio() {
     length: trimmedAudio.length,
   }
 
-  try {
-    const res = await encodeAudioBufferLame(audioData)
-    console.log(res);
-    downloadAudio();
-  } catch (err) {
-    console.log(err);
-
-  }
+  await encodeAudioBufferLame(audioData)
+    .then((res) => {
+      console.log(res);
+      downloadAudio();
+    })
+    .catch((c) => {
+      console.log(c);
+    });
+  console.log(audioData);
 }
 
 function encodeAudioBufferLame(audioData) {
   return new Promise((resolve, reject) => {
-    var worker = new Worker('./worker.js')
-    // var worker = new Worker('https://cdn.jsdelivr.net/gh/fahad-inaequo/fahad-inaequo.github.io/worker.js')
+    var worker = new Worker('./worker/worker.js');
 
     worker.onmessage = (event) => {
       console.log(event.data);
@@ -187,6 +189,7 @@ function playTrack(regionId) {
 }
 
 const startRecording = () => {
+  countDown = 0;
   if (null === myRecorder.objects.context) {
     myRecorder.objects.context = new (window.AudioContext ||
       window.webkitAudioContext)();
@@ -204,6 +207,16 @@ const startRecording = () => {
         { numChannels: 1 }
       );
       myRecorder.objects.recorder.record();
+      timer = setInterval(() => {
+        countDown += 1;
+      
+        document.getElementById('recording-timer').innerText = countDown
+
+        if (countDown === 30) {
+          countDown = 0;
+          stopRecording()
+        }
+      }, 1000);
     })
     .catch(function (err) { console.log(err); });
 }
@@ -219,4 +232,5 @@ const stopRecording = () => {
       loadAudio(blob)
     });
   }
+  clearInterval(timer);
 }
