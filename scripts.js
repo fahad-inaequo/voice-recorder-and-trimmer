@@ -240,7 +240,19 @@ const stopRecording = () => {
 
 function downloadMp3() {
   debugger
-  var MP3Blob = analyzeAudioBuffer(wavesurfer.backend.buffer);
+  let region = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
+  //Create empty buffer and then put the slice of audioBuffer i.e wanted part
+  var startPoint = Math.floor((region.start * audioBuffer.length) / totalAudioDuration);
+  var endPoint = Math.ceil((region.end * audioBuffer.length) / totalAudioDuration);
+  var audioLength = endPoint - startPoint;
+
+  var trimmedAudio = new AudioContext().createBuffer(
+    audioBuffer.numberOfChannels,
+    audioLength,
+    audioBuffer.sampleRate
+  );
+
+  var MP3Blob = analyzeAudioBuffer(trimmedAudio);
   console.log('here is your mp3 url:');
   console.log(URL.createObjectURL(MP3Blob));
 }
