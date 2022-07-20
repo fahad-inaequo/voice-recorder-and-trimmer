@@ -299,9 +299,11 @@ var app = function () {
 
 function downloadMp3() {
   debugger
+  let somoe = wavesurfer.regions.list[Object.keys(wavesurfer.regions.list)[0]]
+  var segmentDuration = somoe.end - somoe.start;
   var originalBuffer = wavesurfer.backend.buffer;
-  var emptySegment = wavesurfer.ac.createBuffer(
-    originalBuffer.channels,
+  var emptySegment = wavesurfer.backend.ac.createBuffer(
+    originalBuffer.numberOfChannels,
     segmentDuration * originalBuffer.sampleRate,
     originalBuffer.sampleRate
   );
